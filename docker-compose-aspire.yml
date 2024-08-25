@@ -1,0 +1,60 @@
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - dbdata:/var/opt/mssql
+
+  open_telemetry_product_svc:
+    image: open_telemetry_product_svc
+    build:
+      context: .
+      dockerfile: OpenTelemetryProductSvc/Dockerfile
+    environment:
+     - ASPNETCORE_ENVIRONMENT=Development
+     - ConnectionStrings__DefaultConnection=Server=db;Database=PricingDb;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+     - OtelMetricCollector__Host=http://aspire-dashboard:18889
+     - OtelTraceCollector__Host=http://aspire-dashboard:18889
+     - APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=24548519-ec60-4cfb-b882-a22bebc0248d;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=df994b33-78a7-4720-8130-df0512d072bb
+     - RabbitMQ__Host=rabiitmq_shop
+     - PricingApi__BaseUrl=http://open_telemetry_pricing_svc/api
+     - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
+    ports:
+      - "5000:80"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  open_telemetry_pricing_svc:
+    image: open_telemetry_pricing_svc
+    build:
+      context: .
+      dockerfile: OpenTelemetryPricingSvc/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=ProductDb;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+      - OtelMetricCollector__Host=http://aspire-dashboard:18889
+      - OtelTraceCollector__Host=http://aspire-dashboard:18889
+      - APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=24548519-ec60-4cfb-b882-a22bebc0248d;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=df994b33-78a7-4720-8130-df0512d072bb
+      - RabbitMQ__Host=rabiitmq_shop
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889
+    ports:
+     - "5001:80"
+    volumes:
+     - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+     - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/nightly/aspire-dashboard
+    ports:
+    - "4317:18889"
+    - "18888:18888"
+
+volumes:
+  dbdata:
+  

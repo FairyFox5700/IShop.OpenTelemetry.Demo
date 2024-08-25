@@ -1,0 +1,103 @@
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+      - "1433:1433"
+    volumes:
+      - dbdata:/var/opt/mssql
+
+  open_telemetry_product_svc:
+    image: open_telemetry_product_svc
+    build:
+      context: .
+      dockerfile: OpenTelemetryProductSvc/Dockerfile
+
+  open_telemetry_pricing_svc:
+    image: open_telemetry_pricing_svc
+    build:
+      context: .
+      dockerfile: OpenTelemetryPricingSvc/Dockerfile
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686" # Jaeger UI
+
+  loki:
+    image: grafana/loki:latest
+    command: [ "-config.file=/etc/loki/local-config.yaml" ]
+    ports:
+      - "3100:3100"
+   #   volumes:
+   #     - ./loki-config.yaml:/etc/loki/local-config.yaml
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabiitmq_shop
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  # http://localhost:9090/
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    command:
+      - --config.file=/etc/prometheus/prometheus-config.yaml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage
+    volumes:
+      - ./prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
+    ports:
+      - "9090:9090"
+
+
+  # OpenTelemetry Collector
+  otel-collector:
+    image:  otel/opentelemetry-collector-contrib:0.89.0
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otel-collector.yaml
+      - ./output:/etc/output:rw # Store the logs
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "9201:9201"
+      - 1888:1888 # pprof extension
+      - 13133:13133 # health_check extension
+      - 55679:55679 # zpages extension
+      - 8888:8888 # Prometheus metrics exposed by the collector
+      - 8889:8889 # Prometheus exporter metrics
+    depends_on:
+      - prometheus
+      - db
+      - jaeger
+      - loki
+      - open_telemetry_product_svc
+      - open_telemetry_pricing_svc
+
+
+# UI to query traces and metrics
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    ports:
+      - "3000:3000"
+    depends_on:
+      - otel-collector
+      - jaeger
+      - prometheus
+      - loki
+    
+
+volumes:
+  dbdata:
+  

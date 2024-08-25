@@ -1,0 +1,12 @@
+﻿services:
+  dotnetapp:
+    build: .
+    ports:
+      - "5000:80"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus-config.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>f917f61d-35b9-449f-ab3e-85ea93005a42</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="8.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenTelemetryPricingSvc\OpenTelemetryPricingSvc.csproj" />
+    <ProjectReference Include="..\OpenTelemetryProductSvc\OpenTelemetryProductSvc.csproj" />
+    <ProjectReference Include="..\UserManagementService\UserManagementService.csproj" />
+  </ItemGroup>
+
+</Project>

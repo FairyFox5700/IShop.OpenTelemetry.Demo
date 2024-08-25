@@ -1,0 +1,20 @@
+﻿[
+  {
+    "DiscountId": "1f6e48f4-71d7-464e-b914-dfc4b800f31a",
+    "ProductId": "b2a8de16-345d-4e0b-b0d1-7e24c2a9b5ea",
+    "DiscountType": "Percentage",
+    "DiscountValue": 10,
+    "StartDate": "2024-08-01T00:00:00Z",
+    "EndDate": "2024-08-31T23:59:59Z",
+    "IsActive": true
+  },
+  {
+    "DiscountId": "2a0a1d78-4f49-4a60-9f91-038623f18b91",
+    "ProductId": "7d8b5280-7d36-4d87-b6a7-cb18c4b3d9c8",
+    "DiscountType": "Fixed",
+    "DiscountValue": 5,
+    "StartDate": "2024-08-01T00:00:00Z",
+    "EndDate": "2024-08-31T23:59:59Z",
+    "IsActive": true
+  }
+]

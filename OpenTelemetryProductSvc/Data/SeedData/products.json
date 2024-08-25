@@ -1,0 +1,14 @@
+﻿[
+  {
+    "Id": "b2a8de16-345d-4e0b-b0d1-7e24c2a9b5ea",
+    "Name": "Product1",
+    "UserId": "5d8b5280-7d36-4d87-b6a7-cb18c4b3d9c8",
+    "Price": 10.0
+  },
+  {
+    "Id": "7d8b5280-7d36-4d87-b6a7-cb18c4b3d9c8",
+    "Name": "Product2",
+    "UserId": "3d8b5280-7d36-4d87-b6a7-cb18c4b3d9c8",
+    "Price": 20.0
+  }
+]
