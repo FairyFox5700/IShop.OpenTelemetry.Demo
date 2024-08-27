@@ -10,12 +10,12 @@
     <DockerServiceName>products</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="docker-compose-aspire.yml" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
+    <None Include="loadTest.js" />
     <None Include="loki-config.yaml" />
     <None Include="local-config.yaml" />
     <None Include="tempo.yaml" />

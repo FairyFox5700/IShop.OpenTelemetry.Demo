@@ -1,4 +1,6 @@
-﻿using OpenTelemetry.Trace;
+﻿using Events;
+using MassTransit;
+using OpenTelemetry.Trace;
 using OpenTelemetryPricingSvc.Requests;
 using OpenTelemetryProductSvc.Models;
 using OpenTelemetryProductSvc.Repositories;
@@ -16,24 +18,32 @@ public interface IProductService
 public class ProductService : IProductService
 {
     private readonly ProductServiceMetrics _metrics;
+    private readonly ILogger<ProductService> _logger;
     private readonly IProductRepository _productRepository;
     private readonly IPricingServiceClient _pricingServiceClient;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly Tracer _tracer;
 
-    public ProductService(IProductRepository productRepository,
+    public ProductService(
+        ILogger<ProductService> logger,
+        IProductRepository productRepository,
         IPricingServiceClient pricingServiceClient,
+         IPublishEndpoint publishEndpoint,
         TracerProvider tracerProvider,
         ProductServiceSettings productServiceSettings,
         ProductServiceMetrics metrics)
     {
+        _logger = logger;
         _productRepository = productRepository;
         _pricingServiceClient = pricingServiceClient;
+        _publishEndpoint = publishEndpoint;
         _tracer = tracerProvider.GetTracer(productServiceSettings.ServiceName);
         _metrics = metrics;
     }
 
     public async Task<IEnumerable<Product>> GetAllProductsAsync()
     {
+        _logger.LogInformation("Retrieving all products.");
         return await _productRepository.GetAllAsync();
     }
 
@@ -76,6 +86,11 @@ public class ProductService : IProductService
     public async Task AddProductAsync(Product product)
     {
         await _productRepository.AddAsync(product);
+        await _publishEndpoint.Publish(new ProductAddedEvent
+        {
+            Id = product.Id,
+            Price = product.Price
+        });
         _metrics.AddProduct();
         _metrics.IncreaseTotalProducts();
     }

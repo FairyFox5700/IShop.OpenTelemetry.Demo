@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using OpenTelemetry.Metrics;
 using OpenTelemetryPricingSvc.Requests;
 using OpenTelemetryPricingSvc.Responces;
 using OpenTelemetryPricingSvc.Services;
@@ -21,9 +20,9 @@ namespace OpenTelemetryPricingSvc.Controllers
 
         // Endpoint to get the current price of a product
         [HttpGet("{productId}")]
-        public ActionResult<PriceResponse> GetPrice(Guid productId)
+        public async Task<ActionResult<PriceResponse>> GetPrice(Guid productId)
         {
-            var priceResponse = _pricingService.GetPrice(productId);
+            var priceResponse = await _pricingService.GetPrice(productId);
             if (priceResponse == null)
             {
                 return NotFound();
@@ -37,7 +36,7 @@ namespace OpenTelemetryPricingSvc.Controllers
         public async Task<IActionResult> UpdatePrice([FromBody] PriceUpdateRequest request)
         {
             await _pricingService.UpdatePriceAsync(request);
-      
+
             return NoContent();
         }
 
@@ -46,7 +45,7 @@ namespace OpenTelemetryPricingSvc.Controllers
         public async Task<IActionResult> ApplyDiscount([FromBody] DiscountApplyRequest request)
         {
             await _pricingService.ApplyDiscountAsync(request);
-       
+
             return NoContent();
         }
     }

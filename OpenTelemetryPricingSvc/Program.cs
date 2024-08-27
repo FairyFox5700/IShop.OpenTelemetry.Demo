@@ -4,6 +4,7 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using OpenTelemetryPricingSvc.Consumers;
 using OpenTelemetryPricingSvc.Repositories;
 using OpenTelemetryPricingSvc.Services;
 
@@ -24,11 +25,12 @@ builder.Services.AddSwaggerGen();
 
 // Configure Database Context
 builder.Services.AddDbContext<PricingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped);
 
 // Configure MassTransit with RabbitMQ
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumer<ProductAddedConsumer>();
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host(builder.Configuration["RabbitMQ:Host"], h =>
@@ -36,15 +38,20 @@ builder.Services.AddMassTransit(x =>
             h.Username(builder.Configuration["RabbitMQ:Username"]);
             h.Password(builder.Configuration["RabbitMQ:Password"]);
         });
+
+        cfg.ReceiveEndpoint("product-added-queue", e =>
+        {
+            e.ConfigureConsumer<ProductAddedConsumer>(context);
+        });
     });
 });
 
 builder.Services.AddSingleton<PricingServiceMetrics>();
 // Configure Repositories and Services
-builder.Services.AddScoped<IProductPriceRepository, ProductPriceRepository>();
+builder.Services.AddTransient<IProductPriceRepository, ProductPriceRepository>();
 builder.Services.AddTransient<IPricingService, PricingService>();
 
-
+builder.Services.AddApplicationInsightsTelemetry();
 // Configure OpenTelemetry
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resourceBuilder => resourceBuilder
@@ -53,13 +60,14 @@ builder.Services.AddOpenTelemetry()
         {
             new KeyValuePair<string, object>("environment", builder.Environment.EnvironmentName)
         }))
-      .WithMetrics(metrics => metrics
+        .WithMetrics(metrics => metrics
         // Custom metrics provider
         .AddMeter(pricingSettings.MeterName)
         // Metrics provides by ASP.NET Core in .NET 8
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
         .AddRuntimeInstrumentation()
+        //.AddAzureMonitorMetricExporter()
         /*.AddPrometheusExporter(opt =>
         {
             // Disable the default metric name suffix for counters

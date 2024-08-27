@@ -1,7 +1,5 @@
 ﻿using Events;
 using MassTransit;
-using MassTransit.Transports;
-using OpenTelemetryPricingSvc.Events;
 using OpenTelemetryPricingSvc.Models;
 using OpenTelemetryPricingSvc.Repositories;
 using OpenTelemetryPricingSvc.Requests;
@@ -9,13 +7,6 @@ using OpenTelemetryPricingSvc.Responces;
 
 namespace OpenTelemetryPricingSvc.Services
 {
-    public interface IPricingService
-    {
-        PriceResponse GetPrice(Guid productId);
-        Task ApplyDiscountAsync(DiscountApplyRequest request);
-        Task UpdatePriceAsync(PriceUpdateRequest request);
-    }
-
     public class PricingService : IPricingService
     {
         private readonly IProductPriceRepository _productPriceRepository;
@@ -31,14 +22,29 @@ namespace OpenTelemetryPricingSvc.Services
             _metrics = metrics;
         }
 
+        public async Task AddPriceAsync(ProductAddedEvent request)
+        {
+            _metrics.RecordPriceAmount(request.Price);
+            _metrics.RecordPriceChangeFrequency(1);
+            _metrics.UpdatePrice();
+            await _productPriceRepository.AddProductPriceAsync(new ProductPrice
+            {
+                Price = request.Price,
+                ProductId = request.Id,
+                DiscountedPrice = request.Price,
+                LastUpdated = DateTime.UtcNow
+            });
+
+        }
+
         public async Task UpdatePriceAsync(PriceUpdateRequest request)
         {
-            var productPrice = _productPriceRepository.GetProductPrice(request.ProductId);
+            var productPrice = await _productPriceRepository.GetProductPriceAsync(request.ProductId);
             if (productPrice != null)
             {
                 productPrice.Price = request.NewPrice;
                 productPrice.LastUpdated = DateTime.UtcNow;
-                _productPriceRepository.UpdateProductPrice(productPrice);
+                await _productPriceRepository.UpdateProductPriceAsync(productPrice);
 
                 // Record the price change amount and frequency
                 _metrics.RecordPriceAmount(request.NewPrice);
@@ -68,15 +74,15 @@ namespace OpenTelemetryPricingSvc.Services
                 IsActive = true
             };
 
-            _productPriceRepository.ApplyDiscount(discount);
+            await _productPriceRepository.ApplyDiscountAsync(discount);
         }
 
-        public PriceResponse GetPrice(Guid productId)
+        public async Task<PriceResponse> GetPrice(Guid productId)
         {
-            var productPrice = _productPriceRepository.GetProductPrice(productId);
-            var activeDiscounts = _productPriceRepository.GetActiveDiscounts(productId).ToList();
+            var productPrice = await _productPriceRepository.GetProductPriceAsync(productId);
+            var activeDiscounts = (await _productPriceRepository.GetActiveDiscountsAsync(productId))?.ToList();
 
-            decimal? discountedPrice = productPrice.Price;
+            decimal? discountedPrice = productPrice?.Price;
             foreach (var discount in activeDiscounts)
             {
                 if (discount.DiscountType == "percentage")
@@ -92,13 +98,13 @@ namespace OpenTelemetryPricingSvc.Services
             return new PriceResponse
             {
                 ProductId = productId,
-                CurrentPrice = productPrice.Price,
+                CurrentPrice = productPrice?.Price ?? 0,
                 DiscountedPrice = discountedPrice,
                 ActiveDiscounts = activeDiscounts
             };
         }
 
-        public void ApplyDiscount(DiscountApplyRequest request)
+        public async Task ApplyDiscount(DiscountApplyRequest request)
         {
             var discount = new Discount
             {
@@ -111,7 +117,7 @@ namespace OpenTelemetryPricingSvc.Services
                 IsActive = true
             };
 
-            _productPriceRepository.ApplyDiscount(discount);
+            await _productPriceRepository.ApplyDiscountAsync(discount);
             _metrics.ApplyDiscount();
             _metrics.IncreaseActiveDiscounts();
         }

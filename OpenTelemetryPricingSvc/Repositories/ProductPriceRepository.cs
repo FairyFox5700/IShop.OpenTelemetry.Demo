@@ -1,13 +1,15 @@
-﻿using OpenTelemetryPricingSvc.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using OpenTelemetryPricingSvc.Models;
 
 namespace OpenTelemetryPricingSvc.Repositories
 {
     public interface IProductPriceRepository
     {
-        ProductPrice GetProductPrice(Guid productId);
-        void UpdateProductPrice(ProductPrice productPrice);
-        IEnumerable<Discount> GetActiveDiscounts(Guid productId);
-        void ApplyDiscount(Discount discount);
+        Task<ProductPrice> GetProductPriceAsync(Guid productId);
+        Task UpdateProductPriceAsync(ProductPrice productPrice);
+        Task<IList<Discount>> GetActiveDiscountsAsync(Guid productId);
+        Task ApplyDiscountAsync(Discount discount);
+        Task AddProductPriceAsync(ProductPrice productPrice); // New method for adding product prices
     }
 
     public class ProductPriceRepository : IProductPriceRepository
@@ -19,32 +21,43 @@ namespace OpenTelemetryPricingSvc.Repositories
             _context = context;
         }
 
-        public ProductPrice GetProductPrice(Guid productId)
+        public async Task<ProductPrice> GetProductPriceAsync(Guid productId)
         {
-            return _context.ProductPrices.SingleOrDefault(p => p.ProductId == productId);
+            return await _context.ProductPrices
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
         }
 
-        public void UpdateProductPrice(ProductPrice productPrice)
+        public async Task UpdateProductPriceAsync(ProductPrice productPrice)
         {
-            var existingProductPrice = _context.ProductPrices.SingleOrDefault(p => p.ProductId == productPrice.ProductId);
+            var existingProductPrice = await _context.ProductPrices
+                .FirstOrDefaultAsync(p => p.ProductId == productPrice.ProductId);
+
             if (existingProductPrice != null)
             {
                 existingProductPrice.Price = productPrice.Price;
                 existingProductPrice.LastUpdated = DateTime.UtcNow;
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
         }
 
-        public IEnumerable<Discount> GetActiveDiscounts(Guid productId)
+        public async Task<IList<Discount>> GetActiveDiscountsAsync(Guid productId)
         {
-            return _context.Discounts.Where(d => d.ProductId == productId && d.IsActive && d.StartDate <= DateTime.UtcNow && d.EndDate >= DateTime.UtcNow).ToList();
+            return await _context.Discounts
+                .Where(d => d.ProductId == productId && d.IsActive
+                && d.StartDate <= DateTime.UtcNow && d.EndDate >= DateTime.UtcNow)
+                .ToListAsync();
         }
 
-        public void ApplyDiscount(Discount discount)
+        public async Task ApplyDiscountAsync(Discount discount)
         {
-            _context.Discounts.Add(discount);
-            _context.SaveChanges();
+            await _context.Discounts.AddAsync(discount);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddProductPriceAsync(ProductPrice productPrice) // Implementation of the new method
+        {
+            await _context.ProductPrices.AddAsync(productPrice);
+            await _context.SaveChangesAsync();
         }
     }
-
 }

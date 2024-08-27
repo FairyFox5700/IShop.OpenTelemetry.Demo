@@ -5,32 +5,3 @@ services:
     environment:
       SA_PASSWORD: "YourStrong!Passw0rd"
       ACCEPT_EULA: "Y"
-  open_telemetry_product_svc:
-    environment:
-     - ASPNETCORE_ENVIRONMENT=Development
-     - ConnectionStrings__DefaultConnection=Server=db;Database=PricingDb;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
-     - OtelMetricCollector__Host=http://otel-collector:4317
-     - OtelTraceCollector__Host=http://otel-collector:4317
-     - APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=24548519-ec60-4cfb-b882-a22bebc0248d;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=df994b33-78a7-4720-8130-df0512d072bb
-     - RabbitMQ__Host=rabiitmq_shop
-     - PricingApi__BaseUrl=http://open_telemetry_pricing_svc/api
-    ports:
-      - "5000:80"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
-
-  open_telemetry_pricing_svc:
-   environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=ProductDb;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
-      - OtelMetricCollector__Host=http://otel-collector:4317
-      - OtelTraceCollector__Host=http://otel-collector:4317
-      - APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=24548519-ec60-4cfb-b882-a22bebc0248d;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=df994b33-78a7-4720-8130-df0512d072bb
-      - RabbitMQ__Host=rabiitmq_shop
-      - DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true 
-   ports:
-     - "5001:80"
-   volumes:
-     - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-     - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro

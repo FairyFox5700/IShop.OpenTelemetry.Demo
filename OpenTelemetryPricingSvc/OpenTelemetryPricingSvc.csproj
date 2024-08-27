@@ -42,10 +42,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Consumers\" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\IShop.ServiceDefaults\IShop.ServiceDefaults.csproj" />
 	</ItemGroup>
 

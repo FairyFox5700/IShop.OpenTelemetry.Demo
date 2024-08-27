@@ -57,6 +57,7 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.Configure<PricingApiSettings>(builder.Configuration.GetSection("PricingApi"));
 // Configure HTTP Client for Pricing Service
 builder.Services.AddHttpClient<IPricingServiceClient, PricingServiceClient>(client =>
