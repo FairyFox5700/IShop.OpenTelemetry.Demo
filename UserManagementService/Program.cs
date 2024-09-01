@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -66,6 +67,7 @@ builder.Services.AddGraphQLServer()
 builder.Services.AddControllers();
 
 builder.Services.AddOpenTelemetry()
+    .UseAzureMonitor()
     .ConfigureResource(resourceBuilder => resourceBuilder
         .AddService(userServiceSettings.ServiceName, serviceVersion: userServiceSettings.ServiceVersion)
         .AddAttributes(new List<KeyValuePair<string, object>>

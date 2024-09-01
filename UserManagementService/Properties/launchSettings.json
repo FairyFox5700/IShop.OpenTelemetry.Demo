@@ -16,7 +16,8 @@
       "launchUrl": "graphql",
       "applicationUrl": "http://localhost:5023",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=24548519-ec60-4cfb-b882-a22bebc0248d;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=df994b33-78a7-4720-8130-df0512d072bb"
       }
     },
     "IIS Express": {

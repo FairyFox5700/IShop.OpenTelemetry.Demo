@@ -4,17 +4,20 @@ import { check, sleep } from 'k6';
 // Configuration for the load test
 export const options = {
     stages: [
-        { duration: '10s', target: 1 }, // Ramp up to 10 users over 1 minute
-        { duration: '20s', target: 1 }, // Stay at 10 users for 2 minutes
-        { duration: '10s', target: 0 },  // Ramp down to 0 users over 1 minute
+        { duration: '30s', target: 100 }, // Ramp up to 100 users over 30 seconds
+        { duration: '1m', target: 100 },   // Stay at 100 users for 1 minute
+        { duration: '30s', target: 0 },    // Ramp down to 0 users over 30 seconds
     ],
 };
 
 // Function to generate a unique ID
-function generateUniqueId() {
-    return `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
-
 
 //k6 run load_test.js
 
@@ -24,7 +27,7 @@ export default function () {
     const baseGetUrl = 'http://localhost:5000/Products/';
 
     // Generate a unique ID for POST request
-    const uniqueId = generateUniqueId();
+    const uniqueId = generateUUID();
 
     // Payload for POST request
     const payload = JSON.stringify({
