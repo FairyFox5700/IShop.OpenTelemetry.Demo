@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
-  <PropertyGroup Label="Globals">
-    <ProjectVersion>2.1</ProjectVersion>
-    <DockerTargetOS>Linux</DockerTargetOS>
-    <DockerPublishLocally>False</DockerPublishLocally>
-    <ProjectGuid>75f1d547-d2fa-43e0-b2ea-846711243722</ProjectGuid>
-    <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/{Scheme}://{ServiceHost}:{ServicePort}</DockerServiceUrl>
-    <DockerServiceName>products</DockerServiceName>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Include="docker-compose.override.yml">
-      <DependentUpon>docker-compose.yml</DependentUpon>
-    </None>
-    <None Include="docker-compose.yml" />
-    <None Include=".dockerignore" />
-    <None Include="loadTest.js" />
-    <None Include="loki-config.yaml" />
-    <None Include="local-config.yaml" />
-    <None Include="tempo.yaml" />
-    <None Include="grafana-datasources.yaml" />
-    <None Include="otel-collector.yaml" />
-    <None Include="prometheus-config.yaml" />
-  </ItemGroup>
+	<PropertyGroup Label="Globals">
+		<ProjectVersion>2.1</ProjectVersion>
+		<DockerTargetOS>Linux</DockerTargetOS>
+		<DockerPublishLocally>False</DockerPublishLocally>
+		<ProjectGuid>75f1d547-d2fa-43e0-b2ea-846711243722</ProjectGuid>
+		<DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
+		<DockerServiceUrl>{Scheme}://localhost:{ServicePort}/{Scheme}://{ServiceHost}:{ServicePort}</DockerServiceUrl>
+		<DockerServiceName>products</DockerServiceName>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="docker-compose.override.yml">
+			<DependentUpon>docker-compose.yml</DependentUpon>
+		</None>
+		<None Include="docker-compose.yml" />
+		<None Include=".dockerignore" />
+		<None Include="graphana-dashboards\asp-net-core-open-telemetry.json" />
+		<None Include="graphana-dashboards\custom-metrics.json" />
+		<None Include="loadTest.js" />
+		<None Include="loki-config.yaml" />
+		<None Include="local-config.yaml" />
+		<None Include="tempo.yaml" />
+		<None Include="grafana-datasources.yaml" />
+		<None Include="otel-collector.yaml" />
+		<None Include="prometheus-config.yaml" />
+	</ItemGroup>
 </Project>
