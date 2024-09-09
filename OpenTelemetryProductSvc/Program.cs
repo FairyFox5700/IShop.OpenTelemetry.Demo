@@ -102,10 +102,6 @@ builder.Services.AddOpenTelemetry()
 {
     t.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(productServiceSettings.ServiceName))
     .AddSource(productServiceSettings.ServiceName)
-   .AddSource(nameof(ProductPriceUpdatedConsumer))
-   .AddSource(nameof(ProductService))
-   .AddSource(nameof(ProductRepository))
-   .AddSource(nameof(ProductsController))
    .SetErrorStatusOnException()
    .SetSampler(new AlwaysOnSampler())
       .AddHttpClientInstrumentation(options =>
