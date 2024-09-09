@@ -56,6 +56,7 @@ builder.Services.AddOpenTelemetry()
         tracerProviderBuilder
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
+            .SetSampler(new TraceIdRatioBasedSampler(0.05)) // 5% sampling rate
             .AddConsoleExporter();
     })
     .WithMetrics(metricsProviderBuilder =>
