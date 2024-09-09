@@ -39,7 +39,6 @@ builder.Services
     .AddHealthChecks()
     .AddDbContextCheck<PricingDbContext>();
 
-
 builder.Services.AddSingleton<PricingServiceMetrics>();
 builder.Services.AddTransient<IProductPriceRepository, ProductPriceRepository>();
 builder.Services.AddTransient<IPricingService, PricingService>();
