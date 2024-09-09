@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetryProductSvc.Consumers;
 using OpenTelemetryProductSvc.Repositories;
@@ -55,12 +56,19 @@ builder.Services
 builder.Services.AddSingleton<ProductServiceMetrics>();
 
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resourceBuilder => resourceBuilder
+    .AddService(productServiceSettings.ServiceName, serviceVersion: productServiceSettings.ServiceVersion)
+    .AddAttributes(new List<KeyValuePair<string, object>>
+    {
+       new KeyValuePair<string, object>("environment", builder.Environment.EnvironmentName)
+    }))
+
     .WithTracing(tracerProviderBuilder =>
     {
         tracerProviderBuilder
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddConsoleExporter();
+         .AddAspNetCoreInstrumentation()
+         .AddHttpClientInstrumentation()
+         .AddConsoleExporter();
     })
     .WithMetrics(metricsProviderBuilder =>
     {

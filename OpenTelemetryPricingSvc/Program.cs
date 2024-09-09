@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetryPricingSvc.Consumers;
 using OpenTelemetryPricingSvc.Repositories;
@@ -44,6 +45,12 @@ builder.Services.AddTransient<IProductPriceRepository, ProductPriceRepository>()
 builder.Services.AddTransient<IPricingService, PricingService>();
 
 builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resourceBuilder => resourceBuilder
+    .AddService(pricingSettings.ServiceName, serviceVersion: pricingSettings.ServiceVersion)
+    .AddAttributes(new List<KeyValuePair<string, object>>
+    {
+       new KeyValuePair<string, object>("environment", builder.Environment.EnvironmentName)
+    }))
     .WithTracing(tracerProviderBuilder =>
     {
         tracerProviderBuilder
