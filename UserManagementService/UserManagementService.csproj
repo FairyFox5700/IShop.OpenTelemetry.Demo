@@ -37,8 +37,4 @@
 		<PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\IShop.ServiceDefaults\IShop.ServiceDefaults.csproj" />
-	</ItemGroup>
-
 </Project>

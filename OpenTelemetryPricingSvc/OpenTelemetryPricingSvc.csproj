@@ -42,8 +42,4 @@
 		<PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.0.0-beta.12" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\IShop.ServiceDefaults\IShop.ServiceDefaults.csproj" />
-	</ItemGroup>
-
 </Project>

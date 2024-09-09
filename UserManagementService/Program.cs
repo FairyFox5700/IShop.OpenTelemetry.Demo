@@ -1,9 +1,7 @@
-using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -14,7 +12,6 @@ using UserManagementService.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
 var userServiceSettings = builder.Configuration.GetSection("UserServiceSettings").Get<UserServiceSettings>();
 builder.Services.AddSingleton<UserServiceSettings>(userServiceSettings);
 
@@ -67,55 +64,14 @@ builder.Services.AddGraphQLServer()
 builder.Services.AddControllers();
 
 builder.Services.AddOpenTelemetry()
-    .UseAzureMonitor()
     .ConfigureResource(resourceBuilder => resourceBuilder
         .AddService(userServiceSettings.ServiceName, serviceVersion: userServiceSettings.ServiceVersion)
         .AddAttributes(new List<KeyValuePair<string, object>>
         {
             new KeyValuePair<string, object>("environment", builder.Environment.EnvironmentName)
-        }))
-      .WithMetrics(metrics => metrics
-        // Custom metrics provider
-        .AddMeter(userServiceSettings.MeterName)
-        // Metrics provides by ASP.NET Core in .NET 8
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddRuntimeInstrumentation()
-        /* .AddPrometheusExporter(opt =>
-         {
-             // Disable the default metric name suffix for counters
-             opt.DisableTotalNameSuffixForCounters = true;
-         })*/
-        .AddOtlpExporter(o =>
-        {
-            o.Endpoint = new Uri(otelMetricCollectorUrl);
-            o.ExportProcessorType = ExportProcessorType.Batch;
-            o.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
-        })) // default port 4317
-            //.AddConsoleExporter())
-.WithTracing(t =>
-{
-    t.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(userServiceSettings.ServiceName))
-    .AddSource(userServiceSettings.ServiceName)
-   .SetErrorStatusOnException()
-   .SetSampler(new AlwaysOnSampler())
-   .AddHttpClientInstrumentation()
-   .AddAspNetCoreInstrumentation(opt => opt.RecordException = true)
-   .AddHotChocolateInstrumentation()
-   .AddEntityFrameworkCoreInstrumentation()
-   .AddSqlClientInstrumentation()
-   .AddOtlpExporter(o =>
-   {
-       o.ExportProcessorType = ExportProcessorType.Batch;
-       o.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
-       o.Endpoint = new Uri(otelTraceCollectorUrl);
-   })
-  .AddConsoleExporter();
-});
+        }));
 
 var app = builder.Build();
-
-app.MapDefaultEndpoints();
 
 // Seed Database
 using (var scope = app.Services.CreateScope())
@@ -125,7 +81,6 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     await DbInitializer.InitializeAsync(context, userManager);
 }
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -143,10 +98,3 @@ app.UseEndpoints(endpoints =>
 });
 
 app.Run();
-
-public class UserServiceSettings
-{
-    public string MeterName { get; set; }
-    public string ServiceName { get; set; }
-    public string ServiceVersion { get; set; }
-}

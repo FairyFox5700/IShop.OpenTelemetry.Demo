@@ -41,7 +41,4 @@
 	<ItemGroup>
 		<Folder Include="Migrations\" />
 	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\IShop.ServiceDefaults\IShop.ServiceDefaults.csproj" />
-	</ItemGroup>
 </Project>
