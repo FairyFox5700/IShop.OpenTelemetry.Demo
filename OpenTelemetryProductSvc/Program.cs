@@ -68,18 +68,22 @@ builder.Services.AddOpenTelemetry()
         tracerProviderBuilder
          .AddAspNetCoreInstrumentation()
          .AddHttpClientInstrumentation()
-         .SetSampler(new TraceIdRatioBasedSampler(0.05)) // 5% sampling rate
+         .SetSampler(new AlwaysOnSampler()) // 5% sampling rate
          .AddConsoleExporter();
     })
     .WithMetrics(metricsProviderBuilder =>
     {
         metricsProviderBuilder
+            .AddMeter(productServiceSettings.MeterName)
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
+            .AddPrometheusExporter()
             .AddConsoleExporter();
     });
 
 var app = builder.Build();
+
+app.MapPrometheusScrapingEndpoint();
 
 using (var scope = app.Services.CreateScope())
 {
