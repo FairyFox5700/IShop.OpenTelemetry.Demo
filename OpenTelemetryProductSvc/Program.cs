@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -9,6 +10,9 @@ using OpenTelemetryProductSvc.Services;
 using OpenTelemetryShop.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var otelMetricCollectorUrl = builder.Configuration["OtelMetricCollector:Host"];
+var otelTraceCollectorUrl = builder.Configuration["OtelTraceCollector:Host"];
 
 var productServiceSettings = builder.Configuration.GetSection("ProductServiceSettings").Get<ProductServiceSettings>();
 builder.Services.AddSingleton<ProductServiceSettings>(productServiceSettings);
@@ -69,7 +73,11 @@ builder.Services.AddOpenTelemetry()
          .AddAspNetCoreInstrumentation()
          .AddHttpClientInstrumentation()
          .SetSampler(new AlwaysOnSampler()) // 5% sampling rate
-         .AddConsoleExporter();
+         .AddOtlpExporter(o =>
+         {
+             o.ExportProcessorType = ExportProcessorType.Batch;
+             o.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+         });
     })
     .WithMetrics(metricsProviderBuilder =>
     {
@@ -77,13 +85,15 @@ builder.Services.AddOpenTelemetry()
             .AddMeter(productServiceSettings.MeterName)
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
-            .AddPrometheusExporter()
-            .AddConsoleExporter();
+            .AddConsoleExporter()
+            .AddOtlpExporter(o =>
+            {
+                o.ExportProcessorType = ExportProcessorType.Batch;
+                o.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+            });
     });
 
 var app = builder.Build();
-
-app.MapPrometheusScrapingEndpoint();
 
 using (var scope = app.Services.CreateScope())
 {
