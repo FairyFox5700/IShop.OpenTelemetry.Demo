@@ -8,6 +8,7 @@ using OpenTelemetryProductSvc.Consumers;
 using OpenTelemetryProductSvc.Repositories;
 using OpenTelemetryProductSvc.Services;
 using OpenTelemetryShop.Repositories;
+using System.Data.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,7 +74,74 @@ builder.Services.AddOpenTelemetry()
          .AddAspNetCoreInstrumentation()
          .AddHttpClientInstrumentation()
          .AddConsoleExporter()
-         .SetSampler(new AlwaysOnSampler()) // 5% sampling rate
+         .SetSampler(new AlwaysOnSampler())
+            .AddHttpClientInstrumentation(options =>
+            {
+                options.EnrichWithHttpRequestMessage = (activity, request) =>
+                {
+                    activity.SetTag("http.method", request.Method.Method);
+                    activity.SetTag("http.url", request.RequestUri.ToString());
+                    activity.SetTag("http.host", request.RequestUri.Host);
+                    activity.SetTag("http.path", request.RequestUri.AbsolutePath);
+                    activity.SetTag("http.query", request.RequestUri.Query);
+
+                    foreach (var header in request.Headers)
+                    {
+                        activity.SetTag($"http.request_header.{header.Key}", string.Join(", ", header.Value));
+                    }
+
+                    if (request.Content != null)
+                    {
+                        activity.SetTag("http.request_content_length", request.Content.Headers.ContentLength?.ToString());
+                        activity.SetTag("http.request_content_type", request.Content.Headers.ContentType?.ToString());
+                    }
+                };
+
+                options.EnrichWithHttpResponseMessage = (activity, response) =>
+                {
+
+                    activity.SetTag("http.status_code", (int)response.StatusCode);
+                    activity.SetTag("http.status_text", response.ReasonPhrase);
+                    activity.SetTag("http.response_length", response.Content.Headers.ContentLength);
+                    activity.SetTag("http.response_content_type", response.Content.Headers.ContentType?.ToString());
+
+                    foreach (var header in response.Headers)
+                    {
+                        activity.SetTag($"http.response_header.{header.Key}", string.Join(", ", header.Value));
+                    }
+
+
+                    if (response.Content != null)
+                    {
+                        var previewLength = 100;
+                        var responsePreview = response.Content.ReadAsStringAsync().Result.Substring(0, Math.Min(previewLength, (int)response.Content.Headers.ContentLength));
+                        activity.SetTag("http.response_preview", responsePreview);
+                    }
+                };
+            })
+            .AddAspNetCoreInstrumentation(opt =>
+            {
+                opt.Filter = ctx =>
+                {
+                    return ctx.Request.Path.StartsWithSegments("/api");
+                };
+                opt.RecordException = true;
+            })
+            .AddEntityFrameworkCoreInstrumentation(options =>
+            {
+                options.EnrichWithIDbCommand = (activity, command) =>
+                {
+                    var stateDisplayName = $"{command.CommandType}";
+                    activity.DisplayName = stateDisplayName;
+
+                    activity.SetTag("db.name", command.Connection.Database);
+                    activity.SetTag("db.statement", command.CommandText);
+                    activity.SetTag("db.command_type", command.CommandType.ToString());
+                    activity.SetTag("db.connection_string", command.Connection.ConnectionString);
+                    activity.SetTag("db.execution_time", DateTime.UtcNow);
+                    activity.SetTag("db.parameters", string.Join(", ", command.Parameters.Cast<DbParameter>().Select(p => $"{p.ParameterName}: {p.Value}")));
+                };
+            })
          .AddOtlpExporter(o =>
          {
              o.Endpoint = new Uri(otelTraceCollectorUrl);
