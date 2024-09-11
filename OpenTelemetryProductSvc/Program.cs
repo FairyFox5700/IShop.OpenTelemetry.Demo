@@ -72,9 +72,11 @@ builder.Services.AddOpenTelemetry()
         tracerProviderBuilder
          .AddAspNetCoreInstrumentation()
          .AddHttpClientInstrumentation()
+         .AddConsoleExporter()
          .SetSampler(new AlwaysOnSampler()) // 5% sampling rate
          .AddOtlpExporter(o =>
          {
+             o.Endpoint = new Uri(otelTraceCollectorUrl);
              o.ExportProcessorType = ExportProcessorType.Batch;
              o.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
          });
@@ -88,6 +90,7 @@ builder.Services.AddOpenTelemetry()
             .AddConsoleExporter()
             .AddOtlpExporter(o =>
             {
+                o.Endpoint = new Uri(otelMetricCollectorUrl);
                 o.ExportProcessorType = ExportProcessorType.Batch;
                 o.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
             });
